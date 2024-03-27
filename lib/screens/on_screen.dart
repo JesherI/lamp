@@ -1,3 +1,5 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:lamp/screens/alarm_screen.dart';
 import 'package:lamp/screens/color_screen.dart';
 import 'package:lamp/screens/home_screen.dart';
@@ -14,6 +16,10 @@ class OnScreen extends StatefulWidget {
 
 class _OnScreenState extends State<OnScreen> {
   int indexNavigation = 0;
+  final Future<FirebaseApp> _fApp = Firebase.initializeApp();
+  String realTimeValue = '0';
+  String getOnceValue = '0';
+  bool status = false;
 
   openScreen(int index, BuildContext context) {
     MaterialPageRoute ruta =
@@ -49,6 +55,18 @@ class _OnScreenState extends State<OnScreen> {
             style: TextStyle(color: AppTheme.colorText)),
         backgroundColor: AppTheme.backColor,
       ),
+      body: FutureBuilder(
+        future: _fApp,
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return const Text("Error de datos");
+          } else if (snapshot.hasData) {
+            return stade();
+          } else {
+            return const CircularProgressIndicator();
+          }
+        },
+      ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: AppTheme.backColor,
         currentIndex: indexNavigation,
@@ -78,6 +96,40 @@ class _OnScreenState extends State<OnScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget content() {
+    DatabaseReference testRef = FirebaseDatabase.instance.ref().child('count');
+    testRef.onValue.listen(
+      (event) {
+        setState(() {
+          realTimeValue = event.snapshot.value.toString();
+        });
+      },
+    );
+    return Text('El valor es : $realTimeValue');
+  }
+
+  Widget stade() {
+    DatabaseReference testRef = FirebaseDatabase.instance.ref().child('Config/Estado');
+    testRef.set(status);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: <Widget>[
+        const Text(
+          '¿Encendido o apagado?',
+        ),
+        Switch(
+          value: status,
+          onChanged: (value) {
+            setState(() {
+              status = value;
+            });
+            testRef.set(status);
+          },
+        ),
+      ],
     );
   }
 }
