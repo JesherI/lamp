@@ -17,8 +17,6 @@ class OnScreen extends StatefulWidget {
 class _OnScreenState extends State<OnScreen> {
   int indexNavigation = 0;
   final Future<FirebaseApp> _fApp = Firebase.initializeApp();
-  String realTimeValue = '0';
-  String getOnceValue = '0';
   bool status = false;
 
   openScreen(int index, BuildContext context) {
@@ -66,6 +64,7 @@ class _OnScreenState extends State<OnScreen> {
             return const CircularProgressIndicator();
           }
         },
+
       ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: AppTheme.backColor,
@@ -99,37 +98,54 @@ class _OnScreenState extends State<OnScreen> {
     );
   }
 
-  Widget content() {
-    DatabaseReference testRef = FirebaseDatabase.instance.ref().child('count');
-    testRef.onValue.listen(
-      (event) {
-        setState(() {
-          realTimeValue = event.snapshot.value.toString();
-        });
-      },
-    );
-    return Text('El valor es : $realTimeValue');
-  }
-
   Widget stade() {
-    DatabaseReference testRef = FirebaseDatabase.instance.ref().child('Config/Estado');
+    DatabaseReference testRef =
+        FirebaseDatabase.instance.ref().child('Config/Estado');
     testRef.set(status);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: <Widget>[
-        const Text(
-          '¿Encendido o apagado?',
-        ),
-        Switch(
-          value: status,
-          onChanged: (value) {
-            setState(() {
-              status = value;
-            });
-            testRef.set(status);
-          },
-        ),
-      ],
+    return Container(
+      constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context)
+              .size
+              .height), // Altura máxima igual al tamaño de la pantalla
+      alignment: Alignment
+          .topCenter, // Alinea el contenido en la parte superior del centro
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment
+            .center, // Alinea el contenido horizontalmente en el centro
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.only(top: 20.0),
+            child: Text(
+              status ? 'Encendido' : 'Apagado',
+              style: const TextStyle(
+                fontSize: 30.0,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.colorText,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10.0),
+            child: Transform.scale(
+              scale: 1.5,
+              child: Switch(
+                value: status,
+                activeColor: Colors.yellow,
+                inactiveThumbColor: Colors.white,
+                inactiveTrackColor: Colors.grey[700], 
+                activeTrackColor: Colors.blue,
+                onChanged: (value) {
+                  setState(() {
+                    status = value;
+                  });
+                  testRef.set(status);
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
